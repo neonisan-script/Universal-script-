@@ -1,0 +1,155 @@
+-- SETTING & UI
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local Logo = Instance.new("ImageLabel")
+local FlyBtn = Instance.new("TextButton")
+local NoclipBtn = Instance.new("TextButton")
+local InfJumpBtn = Instance.new("TextButton")
+local LowGravBtn = Instance.new("TextButton")
+local EspBtn = Instance.new("TextButton")
+
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "GeminiUniversal"
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.5, -100, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 330)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+-- Custom Logo
+Logo.Parent = MainFrame
+Logo.BackgroundTransparency = 1
+Logo.Position = UDim2.new(0.5, -35, 0, 10)
+Logo.Size = UDim2.new(0, 70, 0, 70)
+Logo.Image = "rbxassetid://6031068395" -- Ganti ID jika ingin custom logo lain
+
+Title.Parent = MainFrame
+Title.Text = "GEMINI UNIVERSAL"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 85)
+Title.TextColor3 = Color3.fromRGB(0, 170, 255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+
+-- Toggle Visibility dengan tombol 'K'
+game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.K then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+-- Function untuk bikin tombol cepat
+local function btn(obj, txt, pos)
+    obj.Parent = MainFrame
+    obj.Text = txt
+    obj.Size = UDim2.new(0, 170, 0, 35)
+    obj.Position = pos
+    obj.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    obj.TextColor3 = Color3.fromRGB(255, 255, 255)
+    obj.Font = Enum.Font.Gotham
+    obj.TextSize = 14
+end
+
+btn(FlyBtn, "Fly: OFF", UDim2.new(0.07, 0, 0, 120))
+btn(NoclipBtn, "Noclip: OFF", UDim2.new(0.07, 0, 0, 160))
+btn(InfJumpBtn, "Inf Jump: OFF", UDim2.new(0.07, 0, 0, 200))
+btn(LowGravBtn, "Gravity: Normal", UDim2.new(0.07, 0, 0, 240))
+btn(EspBtn, "ESP: OFF", UDim2.new(0.07, 0, 0, 280))
+
+--- CORE LOGIC ---
+local lp = game.Players.LocalPlayer
+local run = game:GetService("RunService")
+
+-- 1. Fly (Smooth Universal)
+local flying = false
+FlyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    FlyBtn.Text = flying and "Fly: ON" or "Fly: OFF"
+    local char = lp.Character
+    if flying and char and char:FindFirstChild("HumanoidRootPart") then
+        local bv = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0,0,0)
+        bv.Name = "GeminiFly"
+        task.spawn(function()
+            while flying do
+                bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * 60
+                run.RenderStepped:Wait()
+            end
+            bv:Destroy()
+        end)
+    end
+end)
+
+-- 2. Noclip
+local noclip = false
+NoclipBtn.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    NoclipBtn.Text = noclip and "Noclip: ON" or "Noclip: OFF"
+end)
+run.Stepped:Connect(function()
+    if noclip and lp.Character then
+        for _, v in pairs(lp.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+-- 3. Infinite Jump
+local infJump = false
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infJump and lp.Character:FindFirstChildOfClass("Humanoid") then
+        lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+InfJumpBtn.MouseButton1Click:Connect(function()
+    infJump = not infJump
+    InfJumpBtn.Text = infJump and "Inf Jump: ON" or "Inf Jump: OFF"
+end)
+
+-- 4. Gravity
+local grav = false
+LowGravBtn.MouseButton1Click:Connect(function()
+    grav = not grav
+    workspace.Gravity = grav and 45 or 196.2
+    LowGravBtn.Text = grav and "Gravity: LOW" or "Gravity: Normal"
+end)
+
+-- 5. Universal ESP (Box + Highlight)
+local espEnabled = false
+local highlights = {}
+
+local function addESP(p)
+    if p == lp then return end
+    p.CharacterAdded:Connect(function(c)
+        if espEnabled then
+            local h = Instance.new("Highlight", c)
+            h.FillColor = Color3.fromRGB(255, 0, 0)
+            h.OutlineColor = Color3.fromRGB(255, 255, 255)
+        end
+    end)
+    if p.Character then
+        local h = Instance.new("Highlight", p.Character)
+        h.FillColor = Color3.fromRGB(255, 0, 0)
+        h.Enabled = espEnabled
+    end
+end
+
+for _, p in pairs(game.Players:GetPlayers()) do addESP(p) end
+game.Players.PlayerAdded:Connect(addESP)
+
+EspBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    EspBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChildOfClass("Highlight") then
+            p.Character:FindFirstChildOfClass("Highlight").Enabled = espEnabled
+        end
+    end
+end)
