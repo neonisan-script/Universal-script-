@@ -1,0 +1,118 @@
+-- KEY SYSTEM
+local key = "123"
+local input = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+local ScreenGui = Instance.new("ScreenGui", input)
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 300, 0, 150)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -75)
+Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+-- LOGO
+local Logo = Instance.new("ImageLabel", Frame)
+Logo.Size = UDim2.new(0, 50, 0, 50)
+Logo.Position = UDim2.new(0, 10, 0, 10)
+Logo.Image = "rbxassetid://7072719338" -- ganti dengan logo kamu
+
+-- TEXTBOX
+local TextBox = Instance.new("TextBox", Frame)
+TextBox.Size = UDim2.new(0, 200, 0, 30)
+TextBox.Position = UDim2.new(0, 50, 0.5, -15)
+TextBox.PlaceholderText = "Enter Key..."
+
+-- BUTTON
+local Button = Instance.new("TextButton", Frame)
+Button.Size = UDim2.new(0, 100, 0, 30)
+Button.Position = UDim2.new(0.5, -50, 1, -40)
+Button.Text = "Submit"
+
+-- MAIN GUI
+local MainGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+
+MainFrame.Size = UDim2.new(0, 200, 0, 200)
+MainFrame.Position = UDim2.new(0, 20, 0.5, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+MainFrame.Parent = MainGui
+
+-- BUTTONS
+local function createBtn(name, posY)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.Position = UDim2.new(0, 0, 0, posY)
+    btn.Text = name
+    return btn
+end
+
+local flyBtn = createBtn("Fly", 0)
+local noclipBtn = createBtn("Noclip", 35)
+local jumpBtn = createBtn("Infinite Jump", 70)
+local gravityBtn = createBtn("Low Gravity", 105)
+
+-- FUNCTIONS
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+-- FLY
+local flying = false
+flyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    if flying then
+        local bv = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bv.Velocity = Vector3.new(0,50,0)
+        bv.Name = "FlyVel"
+    else
+        if char.HumanoidRootPart:FindFirstChild("FlyVel") then
+            char.HumanoidRootPart.FlyVel:Destroy()
+        end
+    end
+end)
+
+-- NOCLIP
+local noclip = false
+noclipBtn.MouseButton1Click:Connect(function()
+    noclip = not noclip
+end)
+
+game:GetService("RunService").Stepped:Connect(function()
+    if noclip then
+        for _,v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- INFINITE JUMP
+local infJump = false
+jumpBtn.MouseButton1Click:Connect(function()
+    infJump = not infJump
+end)
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infJump then
+        char:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+-- GRAVITY
+local lowGrav = false
+gravityBtn.MouseButton1Click:Connect(function()
+    lowGrav = not lowGrav
+    if lowGrav then
+        game.Workspace.Gravity = 50
+    else
+        game.Workspace.Gravity = 196.2
+    end
+end)
+
+-- KEY CHECK
+Button.MouseButton1Click:Connect(function()
+    if TextBox.Text == key then
+        ScreenGui:Destroy()
+        MainGui.Parent = input
+    else
+        TextBox.Text = "Wrong Key!"
+    end
+end)
