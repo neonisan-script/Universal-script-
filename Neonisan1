@@ -1,0 +1,113 @@
+-- KEY SYSTEM
+local key = "123"
+local input = game:HttpGet("https://pastebin.com/raw/placeholder") -- dummy (bisa diganti)
+local userInput = "123" -- ganti dengan sistem input GUI kalau mau
+
+if userInput ~= key then
+    warn("Wrong Key!")
+    return
+end
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 250, 0, 300)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+-- LOGO
+local Logo = Instance.new("ImageLabel", Frame)
+Logo.Size = UDim2.new(0, 100, 0, 100)
+Logo.Position = UDim2.new(0.5, -50, 0, 0)
+Logo.Image = "rbxassetid://6031094678" -- ganti dengan logo custom kamu
+
+-- BUTTON TEMPLATE
+local function createButton(name, posY)
+    local btn = Instance.new("TextButton", Frame)
+    btn.Size = UDim2.new(0, 200, 0, 30)
+    btn.Position = UDim2.new(0.5, -100, 0, posY)
+    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    return btn
+end
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+-- FLY
+local flyBtn = createButton("Fly", 110)
+local flying = false
+flyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    if flying then
+        local bv = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bv.Velocity = Vector3.new(0,50,0)
+        bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+    else
+        if char.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+            char.HumanoidRootPart.BodyVelocity:Destroy()
+        end
+    end
+end)
+
+-- NOCLIP
+local noclipBtn = createButton("Noclip", 150)
+local noclip = false
+noclipBtn.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclip then
+            for _,v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+-- INFINITE JUMP
+local infJumpBtn = createButton("Infinite Jump", 190)
+local infJump = false
+infJumpBtn.MouseButton1Click:Connect(function()
+    infJump = not infJump
+end)
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infJump then
+        char:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+-- GRAVITY
+local gravBtn = createButton("Low Gravity", 230)
+local lowGrav = false
+gravBtn.MouseButton1Click:Connect(function()
+    lowGrav = not lowGrav
+    if lowGrav then
+        workspace.Gravity = 50
+    else
+        workspace.Gravity = 196.2
+    end
+end)
+
+-- ESP PLAYER
+local espBtn = createButton("ESP Player", 270)
+local esp = false
+
+espBtn.MouseButton1Click:Connect(function()
+    esp = not esp
+    for _,plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            if esp then
+                local highlight = Instance.new("Highlight")
+                highlight.Parent = plr.Character
+                highlight.FillColor = Color3.fromRGB(255,0,0)
+            else
+                if plr.Character:FindFirstChild("Highlight") then
+                    plr.Character.Highlight:Destroy()
+                end
+            end
+        end
+    end
+end)
