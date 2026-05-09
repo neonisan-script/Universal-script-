@@ -1,0 +1,109 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+-- "RightControl" adalah tombol untuk memunculkan/menghilangkan menu
+local Window = Library.CreateLib("GEMINI ADAPTIVE HUB", "GrapeTheme")
+
+-- Variabel Utama
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- TAB UTAMA
+local Main = Window:NewTab("Player Menu")
+local Movement = Main:NewSection("Movement & Physics")
+
+-- 1. FLY (Sederhana menggunakan Velocity)
+local flying = false
+Movement:NewToggle("Fly", "Terbang di dalam map", function(state)
+    flying = state
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(0,0,0)
+    bv.Velocity = Vector3.new(0,0,0)
+    bv.Name = "FlyPoint"
+    
+    if flying then
+        bv.Parent = rootPart
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        -- Logic gerak bisa ditambah sesuai keybind, ini basic fly
+    else
+        if rootPart:FindFirstChild("FlyPoint") then
+            rootPart.FlyPoint:Destroy()
+        end
+    end
+end)
+
+-- 2. NOCLIP
+local noclip = false
+game:GetService("RunService").Stepped:Connect(function()
+    if noclip then
+        for _, v in pairs(character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+Movement:NewToggle("Noclip", "Tembus objek/tembok", function(state)
+    noclip = state
+end)
+
+-- 3. INFINITE JUMP
+local infJump = false
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infJump then
+        character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+Movement:NewToggle("Infinite Jump", "Lompat tanpa henti", function(state)
+    infJump = state
+end)
+
+-- TAB TELEPORT & KOORDINAT
+local Teleport = Window:NewTab("Teleportation")
+local TPSection = Teleport:NewSection("Coordinates")
+
+local tx, ty, tz = 0, 0, 0
+
+TPSection:NewTextBox("X Position", "Input X", function(t) tx = tonumber(t) end)
+TPSection:NewTextBox("Y Position", "Input Y", function(t) ty = tonumber(t) end)
+TPSection:NewTextBox("Z Position", "Input Z", function(t) tz = tonumber(t) end)
+
+TPSection:NewButton("Teleport Now", "Pindah ke koordinat", function()
+    rootPart.CFrame = CFrame.new(tx, ty, tz)
+end)
+
+TPSection:NewButton("Print My Pos", "Cek posisi kamu di Console (F9)", function()
+    local pos = rootPart.Position
+    print("POSISI ANDA: " .. tostring(pos))
+end)
+
+-- TAB VISUAL
+local Visual = Window:NewTab("Visuals")
+local VSection = Visual:NewSection("ESP & Lighting")
+
+VSection:NewButton("Fullbright", "Hapus bayangan & kegelapan", function()
+    game.Lighting.Brightness = 2
+    game.Lighting.GlobalShadows = false
+    game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+end)
+
+VSection:NewButton("Player ESP", "Kotak merah pada musuh", function()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character then
+            local high = Instance.new("Highlight", p.Character)
+            high.FillColor = Color3.fromRGB(255, 0, 0)
+            high.OutlineColor = Color3.fromRGB(255, 255, 255)
+        end
+    end
+end)
+
+-- TAB SETTINGS (Untuk Logo & Toggle)
+local Settings = Window:NewTab("Settings")
+local SSection = Settings:NewSection("Customization")
+
+SSection:NewLabel("Tekan 'Right Control' untuk Hide Menu")
+
+-- Menampilkan Custom Logo di tengah UI
+SSection:NewButton("Tampilkan Logo", "Klik untuk cek logo", function()
+    print("Logo ID: rbxassetid://123456789") -- Ganti ID-nya di sini
+end)
+
+-- KONFIGURASI TOMBOL PENGALIH (TOGGLE UI)
+Window:SetKeybind(Enum.KeyCode.RightControl)
