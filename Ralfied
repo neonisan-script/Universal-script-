@@ -1,0 +1,153 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "🚀 Gemini Universal | Multi-Hack",
+   LoadingTitle = "Initializing Gemini System...",
+   LoadingSubtitle = "by Gemini AI",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "GeminiUniversal",
+      FileName = "Config"
+   },
+   KeySystem = false, 
+})
+
+-- Variabel Logo Custom (Ganti ID di bawah dengan ID punyamu)
+local LogoID = "rbxassetid://1234567890" 
+
+-- ================= TAB PLAYER =================
+local PlayerTab = Window:CreateTab("👤 Player", 4483362458)
+
+PlayerTab:CreateSlider({
+   Name = "WalkSpeed",
+   Range = {16, 500},
+   Increment = 1,
+   Suffix = "Speed",
+   CurrentValue = 16,
+   Flag = "WS",
+   Callback = function(Value)
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+   end,
+})
+
+PlayerTab:CreateToggle({
+   Name = "Infinite Jump",
+   CurrentValue = false,
+   Flag = "InfJump",
+   Callback = function(Value)
+      _G.InfJump = Value
+      game:GetService("UserInputService").JumpRequest:Connect(function()
+         if _G.InfJump then
+            game.Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
+         end
+      end)
+   end,
+})
+
+-- ================= TAB EXPLOITS =================
+local MainTab = Window:CreateTab("🔥 Exploits", 4483345998)
+
+MainTab:CreateButton({
+   Name = "Fly (Press E to Toggle)",
+   Callback = function()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.lua"))()
+   end,
+})
+
+MainTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Flag = "Noclip",
+   Callback = function(Value)
+       _G.Noclip = Value
+       game:GetService("RunService").Stepped:Connect(function()
+           if _G.Noclip then
+               if game.Players.LocalPlayer.Character then
+                   for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                       if v:IsA("BasePart") then v.CanCollide = false end
+                   end
+               end
+           end
+       end)
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "ESP Player (Universal)",
+   Callback = function()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/IratuServices/ESP/main/Universal.lua"))()
+   end,
+})
+
+-- ================= TAB ADMIN TOOLS =================
+local AdminTab = Window:CreateTab("🛠️ Admin Tools", 4483362458)
+
+AdminTab:CreateButton({
+   Name = "Get All Tools (Grab Items)",
+   Callback = function()
+       -- Mencoba mengambil tool dari tempat penyimpanan umum
+       local storage = {game:GetService("Lighting"), game:GetService("ReplicatedStorage")}
+       for _, place in pairs(storage) do
+           for _, item in pairs(place:GetDescendants()) do
+               if item:IsA("Tool") or item:IsA("HopperBin") then
+                   local clone = item:Clone()
+                   clone.Parent = game.Players.LocalPlayer.Backpack
+               end
+           end
+       end
+       Rayfield:Notify({
+          Title = "Gemini Universal",
+          Content = "Mencoba mengambil semua tools yang tersedia!",
+          Duration = 3,
+          Image = LogoID,
+       })
+   end,
+})
+
+AdminTab:CreateButton({
+   Name = "Fling Player",
+   Callback = function()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/0866/lua/main/Fling%20All.lua"))()
+   end,
+})
+
+-- ================= TAB VISUAL & WORLD =================
+local VisualTab = Window:CreateTab("💡 Visuals", 4483362458)
+
+VisualTab:CreateButton({
+   Name = "Fullbright (Anti-Dark)",
+   Callback = function()
+       local Lighting = game:GetService("Lighting")
+       Lighting.Brightness = 2
+       Lighting.ClockTime = 14
+       Lighting.FogEnd = 100000
+       Lighting.GlobalShadows = false
+       Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+   end,
+})
+
+VisualTab:CreateButton({
+   Name = "Auto Wins (Teleport to Finish)",
+   Callback = function()
+       local char = game.Players.LocalPlayer.Character
+       local target = game.Workspace:FindFirstChild("Finish") or game.Workspace:FindFirstChild("End") or game.Workspace:FindFirstChild("Goal")
+       
+       if target and char then
+           char.HumanoidRootPart.CFrame = target.CFrame
+       else
+           Rayfield:Notify({
+              Title = "Error",
+              Content = "Target Finish tidak ditemukan di game ini.",
+              Duration = 3,
+              Image = 4483362458,
+           })
+       end
+   end,
+})
+
+Rayfield:Notify({
+   Title = "Gemini Universal Loaded",
+   Content = "Selamat menggunakan, tetaplah bijak!",
+   Duration = 5,
+   Image = LogoID,
+})
