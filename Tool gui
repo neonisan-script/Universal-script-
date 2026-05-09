@@ -1,0 +1,105 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("GEMINI ADAPTIVE HUB", "GrapeTheme")
+
+-- Variabel Global
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local runService = game:GetService("RunService")
+
+-- Main Tabs
+local Tab1 = Window:NewTab("Movement")
+local Section1 = Tab1:NewSection("Fly & Jump")
+local Tab2 = Window:NewTab("Visuals")
+local Section2 = Tab2:NewSection("ESP & Brightness")
+local Tab3 = Window:NewTab("Teleport")
+local Section3 = Tab3:NewSection("Coordinates TP")
+local Tab4 = Window:NewTab("Credits")
+local Section4 = Tab4:NewSection("Custom Logo")
+
+--- [[ MOVEMENT FEATURES ]] ---
+
+-- Infinite Jump
+local infJumpEnabled = false
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infJumpEnabled then
+        player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+Section1:NewToggle("Infinite Jump", "Loncat tanpa batas", function(state)
+    infJumpEnabled = state
+end)
+
+-- Noclip
+local noclip = false
+runService.Stepped:Connect(function()
+    if noclip then
+        for _, v in pairs(player.Character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
+
+Section1:NewToggle("Noclip", "Tembus tembok", function(state)
+    noclip = state
+end)
+
+-- Speed
+Section1:NewSlider("Walkspeed", "Ubah kecepatan jalan", 250, 16, function(s)
+    player.Character.Humanoid.WalkSpeed = s
+end)
+
+--- [[ VISUAL FEATURES ]] ---
+
+-- Fullbright
+Section2:NewButton("Fullbright / Pencahayaan", "Menerangkan area gelap", function()
+    game:GetService("Lighting").Brightness = 2
+    game:GetService("Lighting").ClockTime = 14
+    game:GetService("Lighting").FogEnd = 100000
+    game:GetService("Lighting").GlobalShadows = false
+end)
+
+-- Simple ESP
+Section2:NewButton("Enable Player ESP", "Melihat player lewat tembok", function()
+    for _, v in pairs(game.Players:GetChildren()) do
+        if v ~= player and v.Character and not v.Character:FindFirstChild("Highlight") then
+            local highlight = Instance.new("Highlight")
+            highlight.Parent = v.Character
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        end
+    end
+end)
+
+--- [[ TELEPORT FEATURES ]] ---
+
+local tpX, tpY, tpZ = 0, 0, 0
+
+Section3:NewTextBox("Set X", "Koordinat X", function(txt) tpX = tonumber(txt) end)
+Section3:NewTextBox("Set Y", "Koordinat Y", function(txt) tpY = tonumber(txt) end)
+Section3:NewTextBox("Set Z", "Koordinat Z", function(txt) tpZ = tonumber(txt) end)
+
+Section3:NewButton("Teleport ke Koordinat", "Pindah ke lokasi input", function()
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(tpX, tpY, tpZ)
+end)
+
+Section3:NewButton("Copy My Coordinates", "Salin koordinat saat ini", function()
+    local pos = player.Character.HumanoidRootPart.Position
+    print("X: "..pos.X.." Y: "..pos.Y.." Z: "..pos.Z)
+end)
+
+--- [[ LOGO & CREDITS ]] ---
+
+-- Menambahkan Logo Custom di Tab Credits
+Section4:NewLabel("Custom Logo Display:")
+local logo = Instance.new("ImageLabel")
+logo.Size = UDim2.new(0, 100, 0, 100)
+logo.Position = UDim2.new(0.5, -50, 0.5, -50)
+-- GANTI ID DI BAWAH INI DENGAN ID IMAGE KAMU
+logo.Image = "rbxassetid://123456789" 
+logo.BackgroundTransparency = 1
+-- Catatan: Logo akan muncul di layar tengah saat script dijalankan jika diparentkan ke CoreGui
+-- Di sini hanya simulasi penempatan logic image.
+
+Section4:NewLabel("Script by Gemini AI")
