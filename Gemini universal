@@ -1,0 +1,105 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("GEMINI ADMIN - PREMIUM", "DarkTheme")
+
+-- Variabel Custom Logo (Ganti ID jika punya sendiri)
+local LogoID = "rbxassetid://123456789" -- Ganti angka ini dengan ID Decal kamu
+
+-- Tab Utama
+local Main = Window:NewTab("Main Cheats")
+local Visuals = Window:NewTab("Visuals")
+local Credits = Window:NewTab("Credits")
+
+local MainSection = Main:NewSection("Movement & Physics")
+local VisualSection = Visuals:NewSection("ESP & Lighting")
+
+--- [ FLY FUNCTION ] ---
+local flying = false
+MainSection:NewToggle("Fly (E)", "Terbang menembus angkasa", function(state)
+    flying = state
+    local player = game.Players.LocalPlayer
+    local mouse = player:GetMouse()
+    if flying then
+        local bpos = Instance.new("BodyPosition", player.Character.HumanoidRootPart)
+        local bgyro = Instance.new("BodyGyro", player.Character.HumanoidRootPart)
+        bpos.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bgyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        
+        spawn(function()
+            while flying do
+                bpos.Position = player.Character.HumanoidRootPart.Position + (workspace.CurrentCamera.CFrame.LookVector * 1)
+                bgyro.CFrame = workspace.CurrentCamera.CFrame
+                task.wait()
+            end
+            bpos:Destroy()
+            bgyro:Destroy()
+        end)
+    end
+end)
+
+--- [ NOCLIP FUNCTION ] ---
+local noclip = false
+MainSection:NewToggle("Noclip", "Tembus Dinding", function(state)
+    noclip = state
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclip and game.Players.LocalPlayer.Character then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+--- [ INF JUMP ] ---
+MainSection:NewToggle("Infinite Jump", "Lompat tanpa batas", function(state)
+    _G.InfJump = state
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+        if _G.InfJump then
+            game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+        end
+    end)
+end)
+
+--- [ ESP PLAYER ] ---
+VisualSection:NewToggle("ESP Players", "Lihat orang di balik tembok", function(state)
+    _G.ESP = state
+    while _G.ESP do
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= game.Players.LocalPlayer and v.Character and not v.Character:FindFirstChild("Highlight") then
+                local highlight = Instance.new("Highlight", v.Character)
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            end
+        end
+        task.wait(1)
+        if not _G.ESP then
+            for _, v in pairs(game.Players:GetPlayers()) do
+                if v.Character and v.Character:FindFirstChild("Highlight") then
+                    v.Character.Highlight:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+--- [ FULLBRIGHT ] ---
+VisualSection:NewToggle("Fullbright", "Hapus Kegelapan", function(state)
+    if state then
+        game:GetService("Lighting").Brightness = 2
+        game:GetService("Lighting").ClockTime = 14
+        game:GetService("Lighting").GlobalShadows = false
+        game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+    else
+        game:GetService("Lighting").Brightness = 1
+        game:GetService("Lighting").GlobalShadows = true
+    end
+end)
+
+--- [ SETTINGS & LOGO ] ---
+Credits:NewSection("Created by Gemini AI")
+Credits:NewLabel("Tombol Toggle UI: RightShift")
+
+-- Tombol Undo/Tutup total
+Credits:NewButton("Destroy GUI (Undo)", "Hapus semua script dari layar", function()
+    Library:Destroy()
+end)
