@@ -1,0 +1,149 @@
+-- [[ MULTI-FUNCTION GUI v2 WITH VIEW & FLING ]] --
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Logo = Instance.new("ImageLabel")
+local NameInput = Instance.new("TextBox") -- Input nama target
+local FlyBtn = Instance.new("TextButton")
+local NoclipBtn = Instance.new("TextButton")
+local InfJumpBtn = Instance.new("TextButton")
+local GravBtn = Instance.new("TextButton")
+local ToolBtn = Instance.new("TextButton")
+local ViewBtn = Instance.new("TextButton")
+local FlingBtn = Instance.new("TextButton")
+
+-- Setup GUI Utama
+ScreenGui.Parent = game.CoreGui
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 420)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+-- Custom Logo
+Logo.Name = "Logo"
+Logo.Parent = MainFrame
+Logo.BackgroundTransparency = 1
+Logo.Position = UDim2.new(0.27, 0, 0.02, 0)
+Logo.Size = UDim2.new(0, 100, 0, 100)
+Logo.Image = "rbxassetid://123456789" -- <<< GANTI ID LOGO DI SINI
+
+-- TextBox untuk Target (View/Fling)
+NameInput.Parent = MainFrame
+NameInput.PlaceholderText = "Masukkan Nama Player..."
+NameInput.Size = UDim2.new(0, 180, 0, 30)
+NameInput.Position = UDim2.new(0.09, 0, 0.28, 0)
+NameInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+NameInput.TextColor3 = Color3.new(1, 1, 1)
+
+-- Function Generator Tombol
+local function createBtn(btn, text, pos, color)
+    btn.Parent = MainFrame
+    btn.Text = text
+    btn.Size = UDim2.new(0, 180, 0, 30)
+    btn.Position = pos
+    btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSansBold
+end
+
+createBtn(FlyBtn, "Fly (E)", UDim2.new(0.09, 0, 0.38, 0))
+createBtn(NoclipBtn, "Noclip", UDim2.new(0.09, 0, 0.46, 0))
+createBtn(InfJumpBtn, "Infinite Jump", UDim2.new(0.09, 0, 0.54, 0))
+createBtn(GravBtn, "Low Gravity", UDim2.new(0.09, 0, 0.62, 0))
+createBtn(ToolBtn, "Get All Tools", UDim2.new(0.09, 0, 0.70, 0))
+createBtn(ViewBtn, "View Player", UDim2.new(0.09, 0, 0.78, 0), Color3.fromRGB(0, 100, 200))
+createBtn(FlingBtn, "Fling Player", UDim2.new(0.09, 0, 0.86, 0), Color3.fromRGB(200, 0, 0))
+
+--- [[ LOGIC ]] ---
+
+local lp = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Fungsi Cari Player berdasarkan Singkatan
+local function getPlayer(name)
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v.Name:lower():sub(1, #name) == name:lower() or v.DisplayName:lower():sub(1, #name) == name:lower() then
+            return v
+        end
+    end
+end
+
+-- 1. View Player
+local viewing = false
+ViewBtn.MouseButton1Click:Connect(function()
+    local target = getPlayer(NameInput.Text)
+    if target and target.Character then
+        viewing = not viewing
+        if viewing then
+            camera.CameraSubject = target.Character.Humanoid
+            ViewBtn.Text = "Unview"
+        else
+            camera.CameraSubject = lp.Character.Humanoid
+            ViewBtn.Text = "View Player"
+        end
+    end
+end)
+
+-- 2. Fling Player (Metode Rotasi Cepat)
+FlingBtn.MouseButton1Click:Connect(function()
+    local target = getPlayer(NameInput.Text)
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = lp.Character.HumanoidRootPart
+        local targetHrp = target.Character.HumanoidRootPart
+        
+        -- Simpan posisi asli
+        local oldPos = hrp.CFrame
+        
+        -- Kecepatan rotasi gila untuk efek fling
+        local velocity = Instance.new("BodyAngularVelocity", hrp)
+        velocity.AngularVelocity = Vector3.new(0, 99999, 0)
+        velocity.MaxTorque = Vector3.new(0, 99999, 0)
+        velocity.P = 99999
+        
+        -- Teleport ke target sebentar untuk menabraknya
+        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 0.5)
+        wait(0.2)
+        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, -0.5)
+        wait(0.1)
+        
+        -- Balik ke posisi awal dan hapus efek
+        velocity:Destroy()
+        hrp.CFrame = oldPos
+    end
+end)
+
+-- Fitur lainnya (Fly, Noclip, dll tetap sama dengan script sebelumnya)
+-- [Fly Logic]
+local flying = false
+FlyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    if flying then
+        local bv = Instance.new("BodyVelocity", lp.Character.HumanoidRootPart)
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        spawn(function()
+            while flying do
+                wait()
+                bv.Velocity = camera.CFrame.LookVector * 100
+                lp.Character.Humanoid.PlatformStand = true
+            end
+            bv:Destroy()
+            lp.Character.Humanoid.PlatformStand = false
+        end)
+    end
+end)
+
+-- [Tool, Gravity, Noclip Logic diringkas]
+ToolBtn.MouseButton1Click:Connect(function()
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Tool") then v.Parent = lp.Backpack end
+    end
+end)
+
+local nj = false
+InfJumpBtn.MouseButton1Click:Connect(function() nj = not nj end)
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if nj then lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end
+end)
