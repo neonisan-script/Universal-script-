@@ -1,0 +1,99 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Gemini Multi-Tool v1.0", "DarkTheme")
+
+-- Logo Custom (Ganti ID Asset di bawah dengan ID punyamu)
+local LogoID = "rbxassetid://1234567890" -- Ganti ID ini
+
+-- Tab Utama
+local Main = Window:NewTab("Movement")
+local MainSection = Main:NewSection("Fly & Jump")
+
+local Player = Window:NewTab("Player")
+local PlayerSection = Player:NewSection("ESP & View")
+
+local Combat = Window:NewTab("Combat")
+local CombatSection = Combat:NewSection("Fling & TP")
+
+--- [ FITUR MOVEMENT ] ---
+
+-- Infinite Jump
+local InfiniteJumpEnabled = false
+game:GetService("UserInputService").JumpRequest:Connect(function()
+	if InfiniteJumpEnabled then
+		game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+	end
+end)
+
+MainSection:NewToggle("Infinite Jump", "Lompat tanpa batas", function(state)
+    InfiniteJumpEnabled = state
+end)
+
+-- Noclip
+local Noclip = false
+game:GetService("RunService").Stepped:Connect(function()
+    if Noclip then
+        for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+MainSection:NewToggle("Noclip", "Tembus tembok", function(state)
+    Noclip = state
+end)
+
+-- Fly (Simple version)
+MainSection:NewButton("Fly (E)", "Tekan E untuk terbang", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.lua"))()
+end)
+
+--- [ FITUR PLAYER ] ---
+
+-- ESP Player
+PlayerSection:NewButton("Enable ESP", "Melihat player lewat tembok", function()
+    local function CreateESP(p)
+        local Highlight = Instance.new("Highlight")
+        Highlight.Parent = p.Character
+        Highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    end
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= game.Players.LocalPlayer and v.Character then CreateESP(v) end
+    end
+end)
+
+-- View Player
+PlayerSection:NewTextBox("View Player", "Masukkan nama player", function(txt)
+    local target = game.Players:FindFirstChild(txt)
+    if target then
+        workspace.CurrentCamera.CameraSubject = target.Character.Humanoid
+    end
+end)
+
+PlayerSection:NewButton("Reset View", "Kembali ke karakter sendiri", function()
+    workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+end)
+
+--- [ FITUR COMBAT ] ---
+
+-- Teleport to Player
+CombatSection:NewTextBox("TP to Player", "Masukkan nama player", function(txt)
+    local target = game.Players:FindFirstChild(txt)
+    if target then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+    end
+end)
+
+-- Fling Player (Terpental Jauh)
+CombatSection:NewTextBox("Fling Player", "Target akan terpental", function(txt)
+    local Target = game.Players:FindFirstChild(txt)
+    local LocalPlayer = game.Players.LocalPlayer
+    
+    if Target and Target.Character and LocalPlayer.Character then
+        local thrust = Instance.new("BodyThrust")
+        thrust.Parent = LocalPlayer.Character.HumanoidRootPart
+        thrust.Force = Vector3.new(9999, 9999, 9999) -- Daya terpental
+        LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame
+        wait(0.5)
+        thrust:Destroy()
+    end
+end)
