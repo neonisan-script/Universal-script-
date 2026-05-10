@@ -1,0 +1,61 @@
+local jailPart = script.Parent
+local proximityPrompt = jailPart:WaitForChild("ProximityPrompt")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local jailEvent = ReplicatedStorage:WaitForChild("JailEvent")
+
+-- Konfigurasi
+local JAIL_POSITION = game.Workspace:WaitForChild("JailLocation").Position
+local SPAWN_POSITION = game.Workspace:WaitForChild("SpawnLocation").Position -- Titik bebas
+local JAIL_TIME = 30 
+local isJailed = {}
+
+proximityPrompt.Triggered:Connect(function(cop)
+	-- Mencari target (pemain terdekat)
+	local targetPlayer = nil
+	local closestDist = 12
+	
+	for _, p in pairs(game.Players:GetPlayers()) do
+		if p ~= cop and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			local dist = (cop.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+			if dist < closestDist then
+				targetPlayer = p
+				closestDist = dist
+			end
+		end
+	end
+
+	if targetPlayer and not isJailed[targetPlayer.UserId] then
+		local char = targetPlayer.Character
+		isJailed[targetPlayer.UserId] = true
+
+		-- 1. Bersihkan Inventory
+		targetPlayer.Backpack:ClearAllChildren()
+		for _, item in pairs(char:GetChildren()) do
+			if item:IsA("Tool") then item:Destroy() end
+		end
+
+		-- 2. Ganti Baju (Orange Tahanan)
+		if char:FindFirstChild("Shirt") then char.Shirt.ShirtTemplate = "rbxassetid://6032549503" end
+		if char:FindFirstChild("Pants") then char.Pants.PantsTemplate = "rbxassetid://6032551010" end
+
+		-- 3. Teleport
+		char.HumanoidRootPart.CFrame = CFrame.new(JAIL_POSITION + Vector3.new(0, 3, 0))
+
+		-- 4. Jalankan Timer di UI & Server
+		task.spawn(function()
+			for i = JAIL_TIME, 0, -1 do
+				-- Kirim info waktu ke Client (LocalScript)
+				jailEvent:FireClient(targetPlayer, i, true)
+				task.wait(1)
+				if not game.Players:FindFirstChild(targetPlayer.Name) then break end
+			end
+			
+			-- 5. Bebaskan
+			jailEvent:FireClient(targetPlayer, 0, false)
+			if targetPlayer.Character then
+				targetPlayer:LoadCharacter() -- Reset ke semula
+			end
+			isJailed[targetPlayer.UserId] = nil
+		end)
+	end
+end)
