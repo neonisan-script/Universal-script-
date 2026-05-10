@@ -1,0 +1,82 @@
+--[[ 
+  PETUNJUK: 
+  1. Letakkan script ini di LocalScript (StarterPlayerScripts).
+  2. Pastikan mobil kamu memiliki VehicleSeat.
+  3. Sesuaikan variabel di bawah untuk performa yang diinginkan.
+]]
+
+-- Variabel Konfigurasi
+local MAX_SPEED = 150
+local TURBO_SPEED = 250
+local ACCELERATION = 50
+local STEER_SENSITIVITY = 0.5
+local DRIFT_FRICTION = 0.3 -- Semakin kecil, semakin licin (nge-drift)
+local NORMAL_FRICTION = 1.0
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+
+local currentSeat = nil
+local isTurbo = false
+local isDrifting = false
+
+-- Fungsi untuk mencari VehicleSeat saat pemain duduk
+player.CharacterAdded:Connect(function(char)
+	char:WaitForChild("Humanoid").Seated:Connect(function(active, seat)
+		if active and seat:IsA("VehicleSeat") then
+			currentSeat = seat
+		else
+			currentSeat = nil
+		end
+	end)
+end)
+
+-- Loop Utama Logic Kendaraan
+RunService.RenderStepped:Connect(function()
+	if not currentSeat then return end
+	
+	-- LOGIC SPEED & TURBO
+	local targetSpeed = isTurbo and TURBO_SPEED or MAX_SPEED
+	currentSeat.MaxSpeed = targetSpeed
+	currentSeat.Torque = ACCELERATION
+	
+	-- LOGIC DRIFT (Mengubah Friction ban secara simulasi)
+	-- Catatan: Script ini mengasumsikan ban mobil menggunakan CustomPhysicalProperties
+	for _, part in pairs(currentSeat.Parent:GetDescendants()) do
+		if part:IsA("BasePart") and (part.Name == "Wheel" or part.Name == "Ban") then
+			if isDrifting then
+				part.CustomPhysicalProperties = PhysicalProperties.new(DRIFT_FRICTION, 0.3, 0.5)
+			else
+				part.CustomPhysicalProperties = PhysicalProperties.new(NORMAL_FRICTION, 0.3, 0.5)
+			end
+		end
+	end
+end)
+
+-- Input Controller (Keyboard)
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	
+	-- Shift untuk Turbo
+	if input.KeyCode == Enum.KeyCode.LeftShift then
+		isTurbo = true
+		print("Turbo Active!")
+	end
+	
+	-- Space untuk Drift (Handbrake)
+	if input.KeyCode == Enum.KeyCode.Space then
+		isDrifting = true
+		print("Drifting...")
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.LeftShift then
+		isTurbo = false
+	end
+	
+	if input.KeyCode == Enum.KeyCode.Space then
+		isDrifting = false
+	end
+end)
