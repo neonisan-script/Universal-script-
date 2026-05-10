@@ -1,0 +1,23 @@
+local seat = script.Parent
+local speed = 50 -- Kecepatan maksimal
+local steerAngle = 30 -- Sudut belok maksimal
+
+-- Referensi ke HingeConstraints (Sesuaikan nama ini dengan nama di modelmu)
+local frontLeftSteer = seat.Parent.FrontLeftWheel.HingeConstraint
+local frontRightSteer = seat.Parent.FrontRightWheel.HingeConstraint
+local backLeftMotor = seat.Parent.BackLeftWheel.HingeConstraint
+local backRightMotor = seat.Parent.BackRightWheel.HingeConstraint
+
+seat:GetPropertyChangedSignal("Throttle"):Connect(function()
+    -- Mengatur kecepatan roda belakang
+    local targetSpeed = seat.Throttle * speed
+    backLeftMotor.AngularVelocity = targetSpeed
+    backRightMotor.AngularVelocity = -targetSpeed -- Dibalik karena posisi roda berlawanan
+end)
+
+seat:GetPropertyChangedSignal("Steer"):Connect(function()
+    -- Mengatur belokan roda depan
+    local targetAngle = seat.Steer * steerAngle
+    frontLeftSteer.TargetAngle = targetAngle
+    frontRightSteer.TargetAngle = targetAngle
+end)
