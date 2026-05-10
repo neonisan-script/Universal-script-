@@ -1,0 +1,152 @@
+-- [[ ADMIN MENU PRO: VIEW & FLING EDITION ]] --
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local Logo = Instance.new("ImageLabel")
+local Container = Instance.new("ScrollingFrame")
+local UIListLayout = Instance.new("UIListLayout")
+local TargetInput = Instance.new("TextBox") -- Untuk input nama target
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local camera = workspace.CurrentCamera
+
+-- Setup GUI
+ScreenGui.Name = "AdminMenuV2"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 400)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "ADMIN PANEL V2"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+
+-- Custom Logo (Ganti ID-nya di sini)
+Logo.Parent = MainFrame
+Logo.Size = UDim2.new(0, 60, 0, 60)
+Logo.Position = UDim2.new(0.5, -30, 0, 45)
+Logo.BackgroundTransparency = 1
+Logo.Image = "rbxassetid://123456789" -- Ganti ID Gambar Kamu
+
+-- Input Box untuk Nama Pemain (Target)
+TargetInput.Name = "TargetInput"
+TargetInput.Parent = MainFrame
+TargetInput.Position = UDim2.new(0, 10, 0, 115)
+TargetInput.Size = UDim2.new(0, 200, 0, 30)
+TargetInput.PlaceholderText = "Nama Pemain (Target)"
+TargetInput.Text = ""
+TargetInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TargetInput.TextColor3 = Color3.new(1, 1, 1)
+
+Container.Parent = MainFrame
+Container.Position = UDim2.new(0, 0, 0, 155)
+Container.Size = UDim2.new(1, 0, 1, -155)
+Container.BackgroundTransparency = 1
+Container.CanvasSize = UDim2.new(0, 0, 2, 0)
+
+UIListLayout.Parent = Container
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- Fungsi Helper Mencari Player
+local function getPlayer(name)
+	for _, p in pairs(game.Players:GetPlayers()) do
+		if p.Name:lower():sub(1, #name) == name:lower() then
+			return p
+		end
+	end
+end
+
+local function createButton(name, color, callback)
+	local btn = Instance.new("TextButton")
+	btn.Parent = Container
+	btn.Size = UDim2.new(0.9, 0, 0, 35)
+	btn.Text = name
+	btn.BackgroundColor3 = color
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+-- [[ FITUR FLING & VIEW ]] --
+
+-- 1. VIEW PLAYER
+local viewing = false
+createButton("View / Unview", Color3.fromRGB(70, 130, 180), function()
+	if viewing then
+		camera.CameraSubject = player.Character.Humanoid
+		viewing = false
+	else
+		local target = getPlayer(TargetInput.Text)
+		if target and target.Character then
+			camera.CameraSubject = target.Character.Humanoid
+			viewing = true
+		end
+	end
+end)
+
+-- 2. FLING PLAYER (Spin Fling)
+local flinging = false
+createButton("Fling Target", Color3.fromRGB(220, 20, 60), function()
+	local target = getPlayer(TargetInput.Text)
+	if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+		flinging = not flinging
+		
+		local hrp = player.Character.HumanoidRootPart
+		local originalCFrame = hrp.CFrame
+		
+		local velocity = Instance.new("AngularVelocity")
+		velocity.Parent = hrp
+		velocity.MaxTorque = math.huge
+		velocity.AngularVelocity = Vector3.new(0, 99999, 0) -- Putaran super cepat
+		
+		task.spawn(function()
+			while flinging and target.Character do
+				hrp.CFrame = target.Character.HumanoidRootPart.CFrame
+				task.wait()
+			end
+			velocity:Destroy()
+			hrp.CFrame = originalCFrame
+		end)
+	end
+end)
+
+-- 3. FLY (Simple Camera Fly)
+local flying = false
+createButton("Fly", Color3.fromRGB(60, 179, 113), function()
+	flying = not flying
+	local bv = Instance.new("BodyVelocity", player.Character.HumanoidRootPart)
+	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+	task.spawn(function()
+		while flying do
+			bv.Velocity = camera.CFrame.LookVector * 100
+			task.wait()
+		end
+		bv:Destroy()
+	end)
+end)
+
+-- 4. INF JUMP
+createButton("Inf Jump", Color3.fromRGB(100, 100, 100), function()
+	game:GetService("UserInputService").JumpRequest:Connect(function()
+		player.Character.Humanoid:ChangeState("Jumping")
+	end)
+end)
+
+-- 5. GET TOOLS
+createButton("Get Tools", Color3.fromRGB(150, 150, 30), function()
+	for _, item in pairs(game:GetDescendants()) do
+		if item:IsA("Tool") then item.Parent = player.Backpack end
+	end
+end)
