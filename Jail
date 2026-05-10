@@ -1,0 +1,50 @@
+-- Variabel Konfigurasi
+local jailLocation = Vector3.new(100, 5, 100) -- Ganti dengan koordinat sel penjara kamu
+local jailTime = 15 -- Durasi dalam detik
+
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		-- Folder untuk menyimpan status pemain
+		local isJailed = Instance.new("BoolValue")
+		isJailed.Name = "IsJailed"
+		isJailed.Value = false
+		isJailed.Parent = player
+	end)
+end)
+
+-- Fungsi untuk mengirim pemain ke penjara
+local function sendToJail(targetPlayer)
+	local character = targetPlayer.Character
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	local gui = targetPlayer.PlayerGui:FindFirstChild("JailGui")
+
+	if rootPart and not targetPlayer.IsJailed.Value then
+		targetPlayer.IsJailed.Value = true
+		
+		-- Pindahkan pemain ke sel
+		rootPart.CFrame = CFrame.new(jailLocation)
+		
+		-- Tampilkan Logo Kustom
+		if gui then
+			gui.Enabled = true
+		end
+
+		-- Tunggu masa hukuman
+		task.wait(jailTime)
+
+		-- Bebaskan pemain
+		targetPlayer.IsJailed.Value = false
+		if gui then
+			gui.Enabled = false
+		end
+		
+		-- Opsional: Pindahkan pemain keluar penjara setelah selesai
+		rootPart.CFrame = CFrame.new(0, 5, 0) -- Koordinat spawn bebas
+	end
+end
+
+-- Contoh cara memicu penjara (Misalnya melalui RemoteEvent atau Command)
+-- game.ReplicatedStorage.JailEvent.OnServerEvent:Connect(function(player, targetName)
+--     local target = game.Players:FindFirstChild(targetName)
+--     if target then sendToJail(target) end
+-- end)
